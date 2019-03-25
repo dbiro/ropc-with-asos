@@ -1,18 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.IO;
+using AspNet.Security.OpenIdConnect.Primitives;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using AspNet.Security.OpenIdConnect.Extensions;
-using AspNet.Security.OpenIdConnect.Primitives;
-using AspNet.Security.OpenIdConnect.Server;
-using Microsoft.AspNetCore.Mvc.Authorization;
 
 namespace Poc.Authentication.OpenIdConnect
 {
@@ -28,11 +23,11 @@ namespace Poc.Authentication.OpenIdConnect
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services
-                .AddAuthentication(options =>
-                {
-                    options.DefaultScheme = OpenIdConnectConstants.Schemes.Bearer;
-                })
+            services.AddDataProtection()
+                .SetApplicationName("poc-ropc-oauth")
+                .PersistKeysToFileSystem(new DirectoryInfo("app-keys"));
+
+            services.AddAuthentication(options => { options.DefaultScheme = OpenIdConnectConstants.Schemes.Bearer; })
                 .AddOpenIdConnectServer(options =>
                 {
                     // Create your own authorization provider by subclassing
@@ -43,16 +38,13 @@ namespace Poc.Authentication.OpenIdConnect
                     // During development, you can set AllowInsecureHttp
                     // to true to disable the HTTPS requirement.
                     options.AllowInsecureHttp = true;
-                    // issue a token that never expires
-                    options.AccessTokenLifetime = null;                                        
+                    // issue a token that expires in 24 hours
+                    options.AccessTokenLifetime = TimeSpan.FromHours(24);
+                    options.RefreshTokenLifetime = TimeSpan.FromHours(24);
                 })
                 .AddOAuthValidation();
 
-            services
-                .AddMvc(options =>
-                {
-                    options.Filters.Add(new AuthorizeFilter());
-                })
+            services.AddMvc(options => { options.Filters.Add(new AuthorizeFilter()); })
                 .SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
 
