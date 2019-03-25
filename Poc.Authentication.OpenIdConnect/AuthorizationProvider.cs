@@ -1,16 +1,21 @@
 ﻿using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using AspNet.Security.OpenIdConnect.Extensions;
 using AspNet.Security.OpenIdConnect.Primitives;
 using AspNet.Security.OpenIdConnect.Server;
 using Microsoft.AspNetCore.Authentication;
+using Poc.Authentication.OpenIdConnect.Users;
 
 namespace Poc.Authentication.OpenIdConnect
 {
     public sealed class AuthorizationProvider : OpenIdConnectServerProvider
     {
-        public AuthorizationProvider()
+        private readonly UserStore userStore;
+
+        public AuthorizationProvider(UserStore userStore)
         {
+            this.userStore = userStore;
         }
 
         public override Task ValidateTokenRequest(ValidateTokenRequestContext context)
@@ -33,18 +38,27 @@ namespace Poc.Authentication.OpenIdConnect
 
         public override Task HandleTokenRequest(HandleTokenRequestContext context)
         {
-            if (context.Request.Username == "dani" && context.Request.Password == "iszap")
+            if (userStore.ValidateUserSecret(context.Request.Username, context.Request.Password))
             {
-                var identity = new ClaimsIdentity(context.Scheme.Name);
+                var user = userStore.Get(context.Request.Username);
+
+                var identity = new ClaimsIdentity(OpenIdConnectConstants.Schemes.Bearer);
                 // Note: the subject claim is always included in both identity and
                 // access tokens, even if an explicit destination is not specified
-                identity.AddClaim(new Claim(OpenIdConnectConstants.Claims.Subject, context.Request.Username));
-                // TODO: When adding custom claims, you MUST specify one or more destinations.
-                // identity.AddClaim(new Claim(OpenIdConnectConstants.Claims.Name, context.Request.Username, OpenIdConnectConstants.Destinations.AccessToken)); 
+                identity.AddClaim(OpenIdConnectConstants.Claims.Subject, user.Id.ToString());
+                // When adding custom claims, you MUST specify one or more destinations.
+                identity.AddClaim(ClaimTypes.Name, user.Name, OpenIdConnectConstants.Destinations.AccessToken);                
 
                 var principal = new ClaimsPrincipal(identity);
+                                
+                var ticket = new AuthenticationTicket(principal, OpenIdConnectConstants.Schemes.Bearer);                
+                ticket.SetScopes(
+                    // access reresh token
+                    OpenIdConnectConstants.Scopes.OfflineAccess,
+                    // access identity token
+                    OpenIdConnectConstants.Scopes.OpenId);
 
-                context.Validate(principal);
+                context.Validate(ticket);
             }
             else
             {

@@ -18,8 +18,8 @@ namespace Poc.Authentication.OpenIdConnect.Controllers
         public ActionResult<string> SayHi()
         {
             var userPrincipal = HttpContext.User;
-            var userName = userPrincipal.FindFirst(OpenIdConnectConstants.Claims.Subject);
-            return $"Hi, {userName.Value}!";
+            var userId = userPrincipal.FindFirst(OpenIdConnectConstants.Claims.Subject);
+            return $"Hi, {userPrincipal.Identity.Name}! (id: {userId.Value})";
         }                
     }
 }
