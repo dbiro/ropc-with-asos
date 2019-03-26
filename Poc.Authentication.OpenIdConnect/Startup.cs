@@ -46,7 +46,7 @@ namespace Poc.Authentication.OpenIdConnect
                     // issue an access token that expires in 24 hours
                     options.AccessTokenLifetime = TimeSpan.FromHours(24);
                     // issue a refresh token that expires in 14 days
-                    options.RefreshTokenLifetime = TimeSpan.FromDays(14);
+                    // options.RefreshTokenLifetime = TimeSpan.FromDays(14);
                 })
                 .AddOAuthValidation();
 

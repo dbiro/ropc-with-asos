@@ -52,11 +52,11 @@ namespace Poc.Authentication.OpenIdConnect
                 var principal = new ClaimsPrincipal(identity);
                                 
                 var ticket = new AuthenticationTicket(principal, OpenIdConnectConstants.Schemes.Bearer);                
-                ticket.SetScopes(
-                    // access reresh token
-                    OpenIdConnectConstants.Scopes.OfflineAccess,
-                    // access identity token
-                    OpenIdConnectConstants.Scopes.OpenId);
+                //ticket.SetScopes(
+                //    // access reresh token
+                //    OpenIdConnectConstants.Scopes.OfflineAccess,
+                //    // access identity token
+                //    OpenIdConnectConstants.Scopes.OpenId);
 
                 context.Validate(ticket);
             }

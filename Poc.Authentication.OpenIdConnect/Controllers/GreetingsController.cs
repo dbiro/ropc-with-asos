@@ -7,7 +7,7 @@ namespace Poc.Authentication.OpenIdConnect.Controllers
     [Route("api/[controller]")]
     [ApiController]
     public class GreetingsController : ControllerBase
-    {
+    {        
         [HttpGet("helloworld")]
         public ActionResult<string> SayHelloWorld()
         {
